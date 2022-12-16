@@ -61,18 +61,18 @@ public class ASCIIFILTER {
 
                     // brightness limits for the right characters, yes looks cursed
                     if (image_brightness <= 64 + offset) {
-                        s += "███";
+                        s += "██";
                     } else if (64 + offset < image_brightness && image_brightness < 129 + offset) {
-                        s += "▓▓▓";
+                        s += "▓▓";
                     } else if (129 + offset < image_brightness && image_brightness < 193 + offset) {
-                        s += "▒▒▒";
+                        s += "▒▒";
                     } else {
-                        s += "░░░";
+                        s += "░░";
                     }
                 }
 
                 // progress bar
-                int progress = 10 - (int) (((double) (image_h - 1 - i) / (double) image_h) * 10);
+                int progress = 10 - (int) (((double) (image_h - 1 - i) / (double) image_h) * 10); // Ugly
                 String progress_string = "";
                 for (int c = 0; c < progress; c++)
                     progress_string += "█";
@@ -84,7 +84,7 @@ public class ASCIIFILTER {
             out.println(s);
             out.close();
         } catch (Exception e) {
-            System.out.println("Usage: java ASCIIFILTER <image_pathname> <offset>");
+            System.out.println("Usage: java ASCIIFILTER <image_pathname> <brightness_offset>");
         }
     }
 }
