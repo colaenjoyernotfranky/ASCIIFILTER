@@ -18,16 +18,18 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 
-public class ASCIIFILTER {
+public class ASCIIFILTER { // I know this is all a bit messy, but this was never meant to be a big thing
+                           // we will see
     public static void main(String args[]) throws FileNotFoundException {
         try {
             BufferedImage img = null;
             // getting the image file
             try {
-                img = ImageIO.read(new File(args[0]));
+                img = ImageIO.read(new File(args[0])); // args[0] == pathname for image
             } catch (IOException e) {
                 System.out.println(e);
             }
@@ -40,24 +42,34 @@ public class ASCIIFILTER {
             int image_h = img.getHeight();
             int image_w = img.getWidth();
 
-            // seccond argument of initialization sets the brightness offset [DEFAULT = 85]
+            // second argument of initialization sets the brightness offset [DEFAULT = 85]
             int offset = -85;
-            if (args.length == 2)
-                offset = -Integer.parseInt(args[1]);
+            if (args.length == 4)
+                offset = -Integer.parseInt(args[3]); // args[3] == negative offset value
 
-            // getting the pixel data and turning it into the wierd ascii boxes
-            for (int i = 0; i < image_h; i++) { // "height pointer"
-                for (int j = 0; j < image_w; j++) { // "width pointer"
-                    int p = img.getRGB(j, i);
+            // sampling
+            int image_h_ = image_h;
+            int image_w_ = image_w;
+            BufferedImage sampled_image = img;
+            if (args.length == 3) { // sample the image only if width and height are given as arguments
+                image_h_ = Integer.parseInt(args[1]); // args[1] == sampled image width
+                image_w_ = Integer.parseInt(args[2]); // args[2] == sampled image height
+                sampled_image = new BufferedImage(image_w_, image_h_, BufferedImage.TYPE_INT_RGB);
+                Graphics2D graphics2D = sampled_image.createGraphics();
+                graphics2D.drawImage(img, 0, 0, image_w_, image_h_, null);
+                graphics2D.dispose();
+            }
+
+            // getting the pixel data and turning it into the ascii boxes
+            for (int i = 0; i < image_h_; i++) { // "height pointer"
+                for (int j = 0; j < image_w_; j++) { // "width pointer"
+                    int p = sampled_image.getRGB(j, i);
 
                     int image_r = (p >> 16) & 0xff;
                     int image_g = (p >> 8) & 0xff; // getting the single color values
                     int image_b = p & 0xff;
 
                     int image_brightness = (image_b + image_g + image_r) / 3; // calculating brightness
-                    if (j == image_w - 1) {
-                        s += "\n";
-                    }
 
                     // brightness limits for the right characters, yes looks cursed
                     if (image_brightness <= 64 + offset) {
@@ -70,9 +82,9 @@ public class ASCIIFILTER {
                         s += "░░";
                     }
                 }
-
+                s += "\n";
                 // progress bar
-                int progress = 10 - (int) (((double) (image_h - 1 - i) / (double) image_h) * 10); // Ugly
+                int progress = 10 - (int) (((double) (image_h_ - 1 - i) / (double) image_h_) * 10); // Ugly
                 String progress_string = "";
                 for (int c = 0; c < progress; c++)
                     progress_string += "█";
@@ -84,7 +96,7 @@ public class ASCIIFILTER {
             out.println(s);
             out.close();
         } catch (Exception e) {
-            System.out.println("Usage: java ASCIIFILTER <image_pathname> <brightness_offset>");
+            System.out.println("Usage: java ASCIIFILTER <image_pathname> [<width> <height>] [<brightness_offset>]");
         }
     }
 }
