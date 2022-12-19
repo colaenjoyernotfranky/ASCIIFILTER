@@ -22,82 +22,117 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 
-public class ASCIIFILTER { // I know this is all a bit messy, but this was never meant to be a big thing
-                           // we will see
-    public static void main(String args[]) throws FileNotFoundException {
+public class ASCIIFILTER {
+    // constructors
+    public ASCIIFILTER(String image_pathname) throws FileNotFoundException {
         try {
-            BufferedImage img = null;
-            // getting the image file
-            try {
-                img = ImageIO.read(new File(args[0])); // args[0] == pathname for image
-            } catch (IOException e) {
-                System.out.println(e);
-            }
-            // output declarations
+            BufferedImage img = getInputImage(image_pathname); // input image
             PrintWriter out = new PrintWriter(new File("./output.txt")); // declaration of the output.txt file
-            String s = ""; // output String
-
-            // getting the image dimensions, for those reading, powers of 2 is recomended,
-            // looks best
-            int image_h = img.getHeight();
-            int image_w = img.getWidth();
-
-            // second argument of initialization sets the brightness offset [DEFAULT = 85]
-            int offset = -85;
-            if (args.length == 4)
-                offset = -Integer.parseInt(args[3]); // args[3] == negative offset value
-
-            // sampling
-            int image_h_ = image_h;
-            int image_w_ = image_w;
-            BufferedImage sampled_image = img;
-            if (args.length == 3) { // sample the image only if width and height are given as arguments
-                image_h_ = Integer.parseInt(args[1]); // args[1] == sampled image width
-                image_w_ = Integer.parseInt(args[2]); // args[2] == sampled image height
-                sampled_image = new BufferedImage(image_w_, image_h_, BufferedImage.TYPE_INT_RGB);
-                Graphics2D graphics2D = sampled_image.createGraphics();
-                graphics2D.drawImage(img, 0, 0, image_w_, image_h_, null);
-                graphics2D.dispose();
-            }
-
-            // getting the pixel data and turning it into the ascii boxes
-            for (int i = 0; i < image_h_; i++) { // "height pointer"
-                for (int j = 0; j < image_w_; j++) { // "width pointer"
-                    int p = sampled_image.getRGB(j, i);
-
-                    int image_r = (p >> 16) & 0xff;
-                    int image_g = (p >> 8) & 0xff; // getting the single color values
-                    int image_b = p & 0xff;
-
-                    int image_brightness = (image_b + image_g + image_r) / 3; // calculating brightness
-
-                    // brightness limits for the right characters, yes looks cursed
-                    if (image_brightness <= 64 + offset) {
-                        s += "██";
-                    } else if (64 + offset < image_brightness && image_brightness < 129 + offset) {
-                        s += "▓▓";
-                    } else if (129 + offset < image_brightness && image_brightness < 193 + offset) {
-                        s += "▒▒";
-                    } else {
-                        s += "░░";
-                    }
-                }
-                s += "\n";
-                // progress bar
-                int progress = 10 - (int) (((double) (image_h_ - 1 - i) / (double) image_h_) * 10); // Ugly
-                String progress_string = "";
-                for (int c = 0; c < progress; c++)
-                    progress_string += "█";
-                for (int c = 0; c < 10 - progress; c++)
-                    progress_string += " ";
-                System.out.println("Progress : [" + progress_string + "]" + progress * 10 + "%");
-            }
-            System.out.println("Done.");
-            out.println(s);
-            out.close();
+            String s = toAscii(img, 0); // output String
+            output(s, out);
         } catch (Exception e) {
             System.out.println("Usage: java ASCIIFILTER <image_pathname> [<width> <height>] [<brightness_offset>]");
         }
     }
+
+    public ASCIIFILTER(String image_pathname, int scaled_w, int scaled_h) throws FileNotFoundException {
+        try {
+            BufferedImage img = getInputImage(image_pathname); // input image
+            PrintWriter out = new PrintWriter(new File("./output.txt")); // declaration of the output.txt file
+            BufferedImage scaled_image = scaleImage(img, scaled_w, scaled_h); // scaling image
+            String s = toAscii(scaled_image, 0); // output String
+            output(s, out);
+
+        } catch (Exception e) {
+            System.out.println("Usage: java ASCIIFILTER <image_pathname> [<width> <height>] [<brightness_offset>]");
+        }
+    }
+
+    public ASCIIFILTER(String image_pathname, int scaled_w, int scaled_h, int brightness_offset) {
+        try {
+            BufferedImage img = getInputImage(image_pathname); // input image
+            PrintWriter out = new PrintWriter(new File("./output.txt")); // declaration of the output.txt file
+            int offset = -85;
+            if (brightness_offset != 0) // setting the brightness offset
+                offset = -brightness_offset;
+            BufferedImage scaled_image = scaleImage(img, scaled_w, scaled_h); // scaling image
+            String s = toAscii(scaled_image, offset); // output String
+            output(s, out);
+        } catch (Exception e) {
+            System.out.println("Usage: java ASCIIFILTER <image_pathname> [<width> <height>] [<brightness_offset>]");
+        }
+    }
+
+    // private methods
+    private BufferedImage getInputImage(String pathname) throws FileNotFoundException { // gets the image file
+        BufferedImage img = null;
+        // getting the image file
+        try {
+            img = ImageIO.read(new File(pathname)); // set the file at pathname as image
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+        return img;
+    }
+
+    private BufferedImage scaleImage(BufferedImage img, int new_w, int new_h) { // scaling algorithm
+        BufferedImage sampled_image = new BufferedImage(new_w, new_h, BufferedImage.TYPE_INT_RGB); // declare new image
+        Graphics2D graphics2D = sampled_image.createGraphics();
+        graphics2D.drawImage(img, 0, 0, new_w, new_h, null); // draw old image on new
+        graphics2D.dispose();
+        return sampled_image;
+    }
+
+    private String toAscii(BufferedImage img, int offset) {
+        String s = "";
+        for (int i = 0; i < img.getHeight(); i++) { // "height pointer"
+            for (int j = 0; j < img.getWidth(); j++) { // "width pointer"
+                int p = img.getRGB(j, i);
+
+                int image_r = (p >> 16) & 0xff;
+                int image_g = (p >> 8) & 0xff; // getting the single color values
+                int image_b = p & 0xff;
+
+                int image_brightness = (image_b + image_g + image_r) / 3; // calculating brightness
+
+                // brightness limits for the right characters, yes looks cursed
+                if (image_brightness <= 64 + offset) {
+                    s += "██";
+                } else if (64 + offset < image_brightness && image_brightness < 129 + offset) {
+                    s += "▓▓";
+                } else if (129 + offset < image_brightness && image_brightness < 193 + offset) {
+                    s += "▒▒";
+                } else {
+                    s += "░░";
+                }
+            }
+            s += "\n"; // next line when the width loop is done
+        }
+        return s;
+    }
+
+    private void output(String output_string, PrintWriter out) { // outputs string to file
+        System.out.println("Done.");
+        out.println(output_string);
+        out.close();
+    }
+
+    public static void main(String args[]) {
+        try {
+            // different constructors for different arguments
+            ASCIIFILTER a = null;
+            if (args.length < 3 && args.length >= 1)
+                a = new ASCIIFILTER(args[0]);
+            if (args.length == 3)
+                a = new ASCIIFILTER(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+            if (args.length == 4)
+                a = new ASCIIFILTER(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]),
+                        Integer.parseInt(args[3]));
+        } catch (Exception e) {
+            System.out.println("Usage: java ASCIIFILTER <image_pathname> [<width> <height>] [<brightness_offset>]");
+            System.out.println("False arguments or missing pathname");
+        }
+    }
 }
+
 // 78 79 32 77 65 73 68 69 78 83 63
