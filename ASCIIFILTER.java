@@ -28,7 +28,7 @@ public class ASCIIFILTER {
         try {
             BufferedImage img = getInputImage(image_pathname); // input image
             PrintWriter out = new PrintWriter(new File("./output.txt")); // declaration of the output.txt file
-            String s = toAscii(img, 0); // output String
+            String s = toAscii(img, -85); // output String
             output(s, out);
         } catch (Exception e) {
             System.out.println("Usage: java ASCIIFILTER <image_pathname> [<width> <height>] [<brightness_offset>]");
@@ -40,7 +40,7 @@ public class ASCIIFILTER {
             BufferedImage img = getInputImage(image_pathname); // input image
             PrintWriter out = new PrintWriter(new File("./output.txt")); // declaration of the output.txt file
             BufferedImage scaled_image = scaleImage(img, scaled_w, scaled_h); // scaling image
-            String s = toAscii(scaled_image, 0); // output String
+            String s = toAscii(scaled_image, -85); // output String
             output(s, out);
 
         } catch (Exception e) {
@@ -52,9 +52,7 @@ public class ASCIIFILTER {
         try {
             BufferedImage img = getInputImage(image_pathname); // input image
             PrintWriter out = new PrintWriter(new File("./output.txt")); // declaration of the output.txt file
-            int offset = -85;
-            if (brightness_offset != 0) // setting the brightness offset
-                offset = -brightness_offset;
+            int offset = -brightness_offset;
             BufferedImage scaled_image = scaleImage(img, scaled_w, scaled_h); // scaling image
             String s = toAscii(scaled_image, offset); // output String
             output(s, out);
