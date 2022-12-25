@@ -23,42 +23,25 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 
 public class ASCIIFILTER {
-    // constructors
-    public ASCIIFILTER(String pathname) throws FileNotFoundException {
-        try {
-            String outName = pathname.substring(pathname.lastIndexOf("/") + 1, pathname.lastIndexOf("."));
-            PrintWriter out = new PrintWriter(new File("./" + outName + ".txt")); // declaration of the output.txt file
-            BufferedImage img = getInputImage(pathname); // input image
-            String s = toAscii(img, 0); // output String
-            output(s, out);
-        } catch (Exception e) {
-            System.out.println(
-                    "Usage: java ASCIIFILTER <pathname> [<width> <height>] [<brightness_offset>]");
-        }
+    // constructor
+    public ASCIIFILTER() {
+
     }
 
-    public ASCIIFILTER(String pathname, int scaled_w, int scaled_h) throws FileNotFoundException {
-        try {
-            String outName = pathname.substring(pathname.lastIndexOf("/") + 1, pathname.lastIndexOf("."));
-            PrintWriter out = new PrintWriter(new File("./" + outName + ".txt")); // declaration of the output.txt file
-            BufferedImage img = getInputImage(pathname); // input image
-            BufferedImage scaled_image = scaleImage(img, scaled_w, scaled_h); // scaling image
-            String s = toAscii(scaled_image, 0); // output String
-            output(s, out);
-
-        } catch (Exception e) {
-            System.out.println(
-                    "Usage: java ASCIIFILTER <pathname> [<width> <height>] [<brightness_offset>]");
-        }
-    }
-
-    public ASCIIFILTER(String pathname, int scaled_w, int scaled_h, int brightness_offset) {
+    // public methods
+    public void asciify(String pathname, int scaled_w, int scaled_h, int brightness_offset) {
         try {
             String outName = pathname.substring(pathname.lastIndexOf("/") + 1, pathname.lastIndexOf("."));
             BufferedImage img = getInputImage(pathname); // input image
             PrintWriter out = new PrintWriter(new File("./" + outName + ".txt")); // declaration of the output.txt file
-            int offset = -brightness_offset;
-            BufferedImage scaled_image = scaleImage(img, scaled_w, scaled_h); // scaling image
+            int offset = 0;
+            if (brightness_offset != 0)
+                offset = -brightness_offset;
+            BufferedImage scaled_image = null;
+            if (scaled_h != 0 || scaled_w != 0)
+                scaled_image = scaleImage(img, scaled_w, scaled_h); // scaling image
+            else
+                scaled_image = scaleImage(img, img.getWidth(), img.getHeight());
             String s = toAscii(scaled_image, offset); // output String
             output(s, out);
         } catch (Exception e) {
@@ -67,9 +50,9 @@ public class ASCIIFILTER {
         }
     }
 
-    // public methods
-    public int getPixelBrightness(BufferedImage img, int x, int y) { // calculates the brightness of a specific pixel
-        int p = img.getRGB(x, y);
+    // private methods
+    private int getPixelBrightness(BufferedImage img, int x, int y) { // calculates the brightness of a specific pixel
+        int p = img.getRGB(x, y); // getting the pixel
         int image_r = (p >> 16) & 0xff;
         int image_g = (p >> 8) & 0xff; // getting the rgb values
         int image_b = p & 0xff;
@@ -77,7 +60,6 @@ public class ASCIIFILTER {
         return pixel_brightness;
     }
 
-    // private methods
     private BufferedImage getInputImage(String pathname) throws FileNotFoundException { // gets the image file
         BufferedImage img = null;
         // getting the image file
@@ -127,16 +109,15 @@ public class ASCIIFILTER {
 
     public static void main(String args[]) {
         try {
-            // different constructors for different arguments
-            ASCIIFILTER a = null;
+            ASCIIFILTER a = new ASCIIFILTER();
             if (args.length < 3 && args.length >= 1) {
-                a = new ASCIIFILTER(args[0]);
+                a.asciify(args[0], 0, 0, 0);
             }
             if (args.length == 3)
-                a = new ASCIIFILTER(args[0], Integer.parseInt(args[1]),
-                        Integer.parseInt(args[2]));
+                a.asciify(args[0], Integer.parseInt(args[1]),
+                        Integer.parseInt(args[2]), 0);
             if (args.length == 4)
-                a = new ASCIIFILTER(args[0], Integer.parseInt(args[1]),
+                a.asciify(args[0], Integer.parseInt(args[1]),
                         Integer.parseInt(args[2]), Integer.parseInt(args[3]));
         } catch (Exception e) {
             System.out.println("Usage: java ASCIIFILTER <pathname> [<width> <height>] [<brightness_offset>]");
