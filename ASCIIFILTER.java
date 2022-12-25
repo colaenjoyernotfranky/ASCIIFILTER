@@ -24,41 +24,57 @@ import javax.imageio.ImageIO;
 
 public class ASCIIFILTER {
     // constructors
-    public ASCIIFILTER(String image_pathname) throws FileNotFoundException {
+    public ASCIIFILTER(String pathname) throws FileNotFoundException {
         try {
-            BufferedImage img = getInputImage(image_pathname); // input image
-            PrintWriter out = new PrintWriter(new File("./output.txt")); // declaration of the output.txt file
-            String s = toAscii(img, -85); // output String
+            String outName = pathname.substring(pathname.lastIndexOf("/") + 1, pathname.lastIndexOf("."));
+            PrintWriter out = new PrintWriter(new File("./" + outName + ".txt")); // declaration of the output.txt file
+            BufferedImage img = getInputImage(pathname); // input image
+            String s = toAscii(img, 0); // output String
             output(s, out);
         } catch (Exception e) {
-            System.out.println("Usage: java ASCIIFILTER <image_pathname> [<width> <height>] [<brightness_offset>]");
+            System.out.println(
+                    "Usage: java ASCIIFILTER <pathname> [<width> <height>] [<brightness_offset>]");
         }
     }
 
-    public ASCIIFILTER(String image_pathname, int scaled_w, int scaled_h) throws FileNotFoundException {
+    public ASCIIFILTER(String pathname, int scaled_w, int scaled_h) throws FileNotFoundException {
         try {
-            BufferedImage img = getInputImage(image_pathname); // input image
-            PrintWriter out = new PrintWriter(new File("./output.txt")); // declaration of the output.txt file
+            String outName = pathname.substring(pathname.lastIndexOf("/") + 1, pathname.lastIndexOf("."));
+            PrintWriter out = new PrintWriter(new File("./" + outName + ".txt")); // declaration of the output.txt file
+            BufferedImage img = getInputImage(pathname); // input image
             BufferedImage scaled_image = scaleImage(img, scaled_w, scaled_h); // scaling image
-            String s = toAscii(scaled_image, -85); // output String
+            String s = toAscii(scaled_image, 0); // output String
             output(s, out);
 
         } catch (Exception e) {
-            System.out.println("Usage: java ASCIIFILTER <image_pathname> [<width> <height>] [<brightness_offset>]");
+            System.out.println(
+                    "Usage: java ASCIIFILTER <pathname> [<width> <height>] [<brightness_offset>]");
         }
     }
 
-    public ASCIIFILTER(String image_pathname, int scaled_w, int scaled_h, int brightness_offset) {
+    public ASCIIFILTER(String pathname, int scaled_w, int scaled_h, int brightness_offset) {
         try {
-            BufferedImage img = getInputImage(image_pathname); // input image
-            PrintWriter out = new PrintWriter(new File("./output.txt")); // declaration of the output.txt file
+            String outName = pathname.substring(pathname.lastIndexOf("/") + 1, pathname.lastIndexOf("."));
+            BufferedImage img = getInputImage(pathname); // input image
+            PrintWriter out = new PrintWriter(new File("./" + outName + ".txt")); // declaration of the output.txt file
             int offset = -brightness_offset;
             BufferedImage scaled_image = scaleImage(img, scaled_w, scaled_h); // scaling image
             String s = toAscii(scaled_image, offset); // output String
             output(s, out);
         } catch (Exception e) {
-            System.out.println("Usage: java ASCIIFILTER <image_pathname> [<width> <height>] [<brightness_offset>]");
+            System.out.println(
+                    "Usage: java ASCIIFILTER <pathname> [<width> <height>] [<brightness_offset>]");
         }
+    }
+
+    // public methods
+    public int getPixelBrightness(BufferedImage img, int x, int y) { // calculates the brightness of a specific pixel
+        int p = img.getRGB(x, y);
+        int image_r = (p >> 16) & 0xff;
+        int image_g = (p >> 8) & 0xff; // getting the rgb values
+        int image_b = p & 0xff;
+        int pixel_brightness = (image_b + image_g + image_r) / 3; // calculating based on average of rgb values
+        return pixel_brightness;
     }
 
     // private methods
@@ -85,13 +101,7 @@ public class ASCIIFILTER {
         String s = "";
         for (int i = 0; i < img.getHeight(); i++) { // "height pointer"
             for (int j = 0; j < img.getWidth(); j++) { // "width pointer"
-                int p = img.getRGB(j, i);
-
-                int image_r = (p >> 16) & 0xff;
-                int image_g = (p >> 8) & 0xff; // getting the single color values
-                int image_b = p & 0xff;
-
-                int image_brightness = (image_b + image_g + image_r) / 3; // calculating brightness
+                int image_brightness = getPixelBrightness(img, j, i); // calculating brightness
 
                 // brightness limits for the right characters, yes looks cursed
                 if (image_brightness <= 64 + offset) {
@@ -119,15 +129,17 @@ public class ASCIIFILTER {
         try {
             // different constructors for different arguments
             ASCIIFILTER a = null;
-            if (args.length < 3 && args.length >= 1)
+            if (args.length < 3 && args.length >= 1) {
                 a = new ASCIIFILTER(args[0]);
+            }
             if (args.length == 3)
-                a = new ASCIIFILTER(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+                a = new ASCIIFILTER(args[0], Integer.parseInt(args[1]),
+                        Integer.parseInt(args[2]));
             if (args.length == 4)
-                a = new ASCIIFILTER(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]),
-                        Integer.parseInt(args[3]));
+                a = new ASCIIFILTER(args[0], Integer.parseInt(args[1]),
+                        Integer.parseInt(args[2]), Integer.parseInt(args[3]));
         } catch (Exception e) {
-            System.out.println("Usage: java ASCIIFILTER <image_pathname> [<width> <height>] [<brightness_offset>]");
+            System.out.println("Usage: java ASCIIFILTER <pathname> [<width> <height>] [<brightness_offset>]");
             System.out.println("False arguments or missing pathname");
         }
     }

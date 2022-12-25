@@ -8,8 +8,8 @@ public class Main {
             if (args.length == 3)
                 a = new ASCIIFILTER(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]));
             if (args.length == 4)
-                a = new ASCIIFILTER(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]),
-                        Integer.parseInt(args[3]));
+                a = new ASCIIFILTER(args[0], Integer.parseInt(args[1]),
+                        Integer.parseInt(args[2]), Integer.parseInt(args[3]));
         } catch (Exception e) {
             System.out.println("Usage: java ASCIIFILTER <image_pathname> [<width> <height>] [<brightness_offset>]");
             System.out.println("False arguments or missing pathname");
